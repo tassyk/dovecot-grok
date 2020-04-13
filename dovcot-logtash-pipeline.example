@@ -1,0 +1,28 @@
+# Dovecot servers logs parsing pipeline
+input {
+  file {
+    path => "/var/log/log-dovecot.log"
+    start_position => "beginning"
+    type => "sun-oracle"
+  }
+}
+
+filter {
+ if [type] == "dovecot" {
+   mutate {
+       gsub => [
+           "message","^<(\d*)>","",
+           "message", "[\r]", ""
+        ]
+   }
+   grok {
+       patterns_dir => ["/logstash/pattern/dir"]
+       patterns_files_glob => "dovecot.grok"
+       match => { "message" => "%{DOV}" }
+    }
+  }
+}
+
+output {
+  stdout { codec => rubydebug }
+}
